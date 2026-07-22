@@ -1,0 +1,16 @@
+{
+  "name": "fomo-api",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/server.ts",
+    "wrangler-dev": "wrangler dev --ip 0.0.0.0",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "hono": "^4.12.31"
+  },
+  "devDependencies": {
+    "wrangler": "^4.113.0"
+  }
+}
