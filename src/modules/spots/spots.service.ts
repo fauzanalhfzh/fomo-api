@@ -1,4 +1,4 @@
-import { prisma } from '../../core/prisma'
+import { getPrisma } from '../../core/prisma'
 import { NotFoundError } from '../../core/errors'
 import type {
   CreateSpotInput,
@@ -26,7 +26,7 @@ export async function listSpots(query: ListSpotsQuery) {
   }
 
   const [spots, total] = await Promise.all([
-    prisma.spot.findMany({
+    getPrisma().spot.findMany({
       where,
       skip,
       take: limit,
@@ -36,7 +36,7 @@ export async function listSpots(query: ListSpotsQuery) {
       },
       orderBy: { createdAt: 'desc' },
     }),
-    prisma.spot.count({ where }),
+    getPrisma().spot.count({ where }),
   ])
 
   const meta: PaginationMeta = { page, limit, total }
@@ -54,7 +54,7 @@ export async function listSpots(query: ListSpotsQuery) {
 export async function getNearbySpots(query: NearbySpotsQuery) {
   const { lat, lng, radius } = query
 
-  const spots: any[] = await prisma.$queryRaw`
+  const spots: any[] = await getPrisma().$queryRaw`
     SELECT * FROM (
       SELECT
         s.*,
@@ -74,7 +74,7 @@ export async function getNearbySpots(query: NearbySpotsQuery) {
 }
 
 export async function getSpotById(id: string) {
-  const spot: any = await prisma.spot.findFirst({
+  const spot: any = await getPrisma().spot.findFirst({
     where: { id, isActive: true },
     include: {
       tags: { include: { tag: true } },
@@ -95,7 +95,7 @@ export async function getSpotById(id: string) {
 
   if (!spot) throw new NotFoundError('Spot not found')
 
-  const avgRating = await prisma.review.aggregate({
+  const avgRating = await getPrisma().review.aggregate({
     where: { spotId: id },
     _avg: { rating: true },
   })
@@ -114,7 +114,7 @@ export async function getSpotById(id: string) {
 export async function createSpot(input: CreateSpotInput) {
   const { tagIds, ...data } = input
 
-  const spot: any = await prisma.spot.create({
+  const spot: any = await getPrisma().spot.create({
     data: {
       ...data,
       tags: tagIds
@@ -135,12 +135,12 @@ export async function createSpot(input: CreateSpotInput) {
 }
 
 export async function updateSpot(id: string, input: UpdateSpotInput) {
-  const existing = await prisma.spot.findUnique({ where: { id } })
+  const existing = await getPrisma().spot.findUnique({ where: { id } })
   if (!existing || !existing.isActive) throw new NotFoundError('Spot not found')
 
   const { tagIds, ...data } = input
 
-  const spot: any = await prisma.$transaction(async (tx: any) => {
+  const spot: any = await getPrisma().$transaction(async (tx: any) => {
     if (tagIds) {
       await tx.spotTag.deleteMany({ where: { spotId: id } })
       await tx.spotTag.createMany({
@@ -166,10 +166,10 @@ export async function updateSpot(id: string, input: UpdateSpotInput) {
 }
 
 export async function deleteSpot(id: string) {
-  const existing = await prisma.spot.findUnique({ where: { id } })
+  const existing = await getPrisma().spot.findUnique({ where: { id } })
   if (!existing || !existing.isActive) throw new NotFoundError('Spot not found')
 
-  await prisma.spot.update({
+  await getPrisma().spot.update({
     where: { id },
     data: { isActive: false },
   })

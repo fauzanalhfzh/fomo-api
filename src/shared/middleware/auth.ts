@@ -1,6 +1,6 @@
 import { Context, Next } from 'hono'
 import { supabaseAdmin } from '../../core/supabase'
-import { prisma } from '../../core/prisma'
+import { getPrisma } from '../../core/prisma'
 import { UnauthorizedError, ForbiddenError } from '../../core/errors'
 
 export interface AuthUser {
@@ -24,12 +24,12 @@ export async function authMiddleware(c: Context, next: Next) {
     throw new UnauthorizedError('Invalid or expired token')
   }
 
-  let user = await prisma.user.findUnique({
+  let user = await getPrisma().user.findUnique({
     where: { id: data.user.id },
   })
 
   if (!user) {
-    user = await prisma.user.create({
+    user = await getPrisma().user.create({
       data: {
         id: data.user.id,
         email: data.user.email,

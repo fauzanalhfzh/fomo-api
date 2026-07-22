@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { supabaseAdmin } from '../../core/supabase'
-import { prisma } from '../../core/prisma'
+import { getPrisma } from '../../core/prisma'
 import { googleLoginSchema, refreshSchema } from './auth.schema'
 import { AppError } from '../../core/errors'
 
@@ -21,12 +21,12 @@ auth.post('/google', async (c) => {
 
   const supabaseUser = data.user
 
-  let user = await prisma.user.findUnique({
+  let user = await getPrisma().user.findUnique({
     where: { id: supabaseUser.id },
   })
 
   if (!user) {
-    user = await prisma.user.create({
+    user = await getPrisma().user.create({
       data: {
         id: supabaseUser.id,
         email: supabaseUser.email,
