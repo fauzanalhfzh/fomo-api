@@ -1,18 +1,72 @@
-import { Hono } from 'hono'
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
 import { supabaseAdmin } from '../../core/supabase'
 import { getPrisma } from '../../core/prisma'
-import { googleLoginSchema, refreshSchema } from './auth.schema'
+import { googleLoginSchema, refreshSchema, GoogleLoginResponseSchema, RefreshResponseSchema, LogoutResponseSchema } from './auth.schema'
 import { AppError } from '../../core/errors'
+import { ErrorResponseSchema } from '../../shared/openapi'
 
-const auth = new Hono()
+const auth = new OpenAPIHono()
 
-auth.post('/google', async (c) => {
-  const body = await c.req.json()
-  const parsed = googleLoginSchema.parse(body)
+const googleRoute = createRoute({
+  method: 'post',
+  path: '/google',
+  tags: ['Auth'],
+  request: {
+    body: {
+      content: { 'application/json': { schema: googleLoginSchema } },
+    },
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: GoogleLoginResponseSchema } },
+      description: 'Login successful',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Authentication failed',
+    },
+  },
+})
+
+const refreshRoute = createRoute({
+  method: 'post',
+  path: '/refresh',
+  tags: ['Auth'],
+  request: {
+    body: {
+      content: { 'application/json': { schema: refreshSchema } },
+    },
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: RefreshResponseSchema } },
+      description: 'Token refreshed',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Refresh failed',
+    },
+  },
+})
+
+const logoutRoute = createRoute({
+  method: 'post',
+  path: '/logout',
+  tags: ['Auth'],
+  responses: {
+    200: {
+      content: { 'application/json': { schema: LogoutResponseSchema } },
+      description: 'Logged out successfully',
+    },
+  },
+})
+
+auth.openapi(googleRoute, async (c) => {
+  const { id_token } = c.req.valid('json')
 
   const { data, error } = await supabaseAdmin.auth.signInWithIdToken({
     provider: 'google',
-    token: parsed.id_token,
+    token: id_token,
   })
 
   if (error || !data.user) {
@@ -51,12 +105,11 @@ auth.post('/google', async (c) => {
   })
 })
 
-auth.post('/refresh', async (c) => {
-  const body = await c.req.json()
-  const parsed = refreshSchema.parse(body)
+auth.openapi(refreshRoute, async (c) => {
+  const { refresh_token } = c.req.valid('json')
 
   const { data, error } = await supabaseAdmin.auth.refreshSession({
-    refresh_token: parsed.refresh_token,
+    refresh_token,
   })
 
   if (error) {
@@ -71,7 +124,7 @@ auth.post('/refresh', async (c) => {
   })
 })
 
-auth.post('/logout', async (c) => {
+auth.openapi(logoutRoute, async (c) => {
   const header = c.req.header('Authorization')
   if (header?.startsWith('Bearer ')) {
     const token = header.slice(7)
