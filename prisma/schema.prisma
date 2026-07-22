@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id
+  email     String?  @unique
+  alias     String?
+  avatarUrl String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  claimedSpots Spot[]
+  reviews      Review[]
+}
+
+model Spot {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  address     String
+  latitude    Float
+  longitude   Float
+  imageUrl    String?
+  fomoScore   Float    @default(0)
+  isActive    Boolean  @default(true)
+  claimedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  claimedBy User?      @relation(fields: [claimedById], references: [id])
+  tags      SpotTag[]
+  reviews   Review[]
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  spots SpotTag[]
+}
+
+model SpotTag {
+  spotId String
+  tagId  String
+  spot   Spot @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([spotId, tagId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  content   String?
+  userId    String
+  spotId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  spot Spot @relation(fields: [spotId], references: [id])
+}
