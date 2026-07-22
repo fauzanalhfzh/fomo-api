@@ -1,6 +1,6 @@
 import app from './index'
 
-const port = Number(process.env.PORT) || 8787
+const port = Number(process.env.PORT) 
 
 Bun.serve({
   fetch: app.fetch,

@@ -1,5 +1,7 @@
 import { OpenAPIHono } from '@hono/zod-openapi'
 import { swaggerUI } from '@hono/swagger-ui'
+import { cors } from 'hono/cors'
+import { logger } from 'hono/logger'
 import { HTTPException } from 'hono/http-exception'
 import authRoutes from './modules/auth/auth.routes'
 import spotsRoutes from './modules/spots/spots.routes'
@@ -8,6 +10,13 @@ import { AppError } from './core/errors'
 import { ZodError } from 'zod/v4'
 
 const app = new OpenAPIHono()
+
+app.use('*', cors({
+  origin: ["http://localhost:6767"],
+  credentials: true,
+}))
+
+app.use('*', logger())
 
 app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
   type: 'http',
@@ -22,7 +31,7 @@ app.doc('/doc', {
     version: '1.0.0',
     description: 'API for FOMO (Fear Of Missing Out) — spot discovery platform',
   },
-  servers: [{ url: 'http://localhost:8787', description: 'Local dev' }],
+  servers: [{ url: `http://localhost:${process.env.PORT}`, description: 'Local dev' }],
 })
 
 app.get('/swagger', swaggerUI({ url: '/doc' }))
@@ -54,7 +63,7 @@ app.onError((err, c) => {
     )
   }
 
-  console.error('Unhandled error:', err)
+  console.error(`[CRASH] ${c.req.method} ${c.req.path}:`, err)
   return c.json(
     { error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
     500 as ContentfulStatusCode,
