@@ -4,6 +4,7 @@ const TEST_FILES = [
   'src/modules/spots/spots.test.ts',
   'src/modules/users/users.test.ts',
   'src/modules/reviews/reviews.test.ts',
+  'src/modules/vault/vault.test.ts',
 ]
 
 let passCount = 0

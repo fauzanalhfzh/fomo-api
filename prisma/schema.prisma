@@ -43,6 +43,7 @@ model User {
 
   claimedSpots Spot[]
   reviews      Review[]
+  vault        VaultEntry[]
 }
 
 model Spot {
@@ -57,20 +58,21 @@ model Spot {
   isActive    Boolean  @default(true)
   claimedById String?
 
-  priceMin   Int?
-  priceMax   Int?
-  openDays   String?
-  openTime   String?
-  closeTime  String?
-  website    String?
+  priceMin    Int?
+  priceMax    Int?
+  openDays    String?
+  openTime    String?
+  closeTime   String?
+  website     String?
   socialMedia Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  claimedBy User?      @relation(fields: [claimedById], references: [id])
+  claimedBy User?         @relation(fields: [claimedById], references: [id])
   tags      SpotTag[]
   reviews   Review[]
+  vault     VaultEntry[]
   facility  SpotFacility?
 }
 
@@ -87,8 +89,8 @@ model Tag {
 model SpotTag {
   spotId String
   tagId  String
-  spot   Spot @relation(fields: [spotId], references: [id], onDelete: Cascade)
-  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  spot   Spot   @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([spotId, tagId])
 }
@@ -106,17 +108,29 @@ model Review {
   spot Spot @relation(fields: [spotId], references: [id])
 }
 
-model SpotFacility {
-  id        String         @id @default(cuid())
-  spotId    String         @unique
-  spot      Spot           @relation(fields: [spotId], references: [id], onDelete: Cascade)
+model VaultEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  spotId    String
+  createdAt DateTime @default(now())
 
-  wifi      FacilityLevel  @default(TIDAK_ADA)
-  wifiSpeed String?
-  plugs     FacilityLevel  @default(TIDAK_ADA)
-  comfyDesk FacilityLevel  @default(TIDAK_ADA)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spot Spot @relation(fields: [spotId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, spotId])
+}
+
+model SpotFacility {
+  id     String @id @default(cuid())
+  spotId String @unique
+  spot   Spot   @relation(fields: [spotId], references: [id], onDelete: Cascade)
+
+  wifi       FacilityLevel @default(TIDAK_ADA)
+  wifiSpeed  String?
+  plugs      FacilityLevel @default(TIDAK_ADA)
+  comfyDesk  FacilityLevel @default(TIDAK_ADA)
   atmosphere Atmosphere?
-  hasIndoor Boolean        @default(false)
+  hasIndoor  Boolean       @default(false)
 
   toiletLevel FacilityLevel @default(TIDAK_ADA)
   toilets     Toilet[]
@@ -126,20 +140,20 @@ model SpotFacility {
 }
 
 model Toilet {
-  id              String      @id @default(cuid())
-  facilityId      String
-  facility        SpotFacility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  id         String       @id @default(cuid())
+  facilityId String
+  facility   SpotFacility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
 
   type            ToiletType
   gender          GenderType
   cleanliness     Int
-  hasDisabled     Boolean     @default(false)
-  hasBabyFacility Boolean     @default(false)
-  hasMusholla     Boolean     @default(false)
-  hasTissue       Boolean     @default(false)
-  hasSoap         Boolean     @default(false)
-  hasSanitizer    Boolean     @default(false)
-  hasWastafel     Boolean     @default(true)
+  hasDisabled     Boolean    @default(false)
+  hasBabyFacility Boolean    @default(false)
+  hasMusholla     Boolean    @default(false)
+  hasTissue       Boolean    @default(false)
+  hasSoap         Boolean    @default(false)
+  hasSanitizer    Boolean    @default(false)
+  hasWastafel     Boolean    @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

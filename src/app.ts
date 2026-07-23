@@ -7,6 +7,7 @@ import authRoutes from './modules/auth/auth.routes'
 import spotsRoutes from './modules/spots/spots.routes'
 import tagsRoutes from './modules/tags/tags.routes'
 import usersRoutes from './modules/users/users.routes'
+import vaultRoutes from './modules/vault/vault.routes'
 import { spotReviewsRouter, reviewRouter } from './modules/reviews/reviews.routes'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { AppError } from './core/errors'
@@ -79,6 +80,7 @@ app.route('/api/tags', tagsRoutes)
 app.route('/api/users', usersRoutes)
 app.route('/api/spots', spotReviewsRouter)
 app.route('/api/reviews', reviewRouter)
+app.route('/api/vault', vaultRoutes)
 
 app.get('/', (c) => {
   return c.text('FOMO API')
