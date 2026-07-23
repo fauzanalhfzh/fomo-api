@@ -5,6 +5,9 @@ import { logger } from 'hono/logger'
 import { HTTPException } from 'hono/http-exception'
 import authRoutes from './modules/auth/auth.routes'
 import spotsRoutes from './modules/spots/spots.routes'
+import tagsRoutes from './modules/tags/tags.routes'
+import usersRoutes from './modules/users/users.routes'
+import { spotReviewsRouter, reviewRouter } from './modules/reviews/reviews.routes'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { AppError } from './core/errors'
 import { ZodError } from 'zod/v4'
@@ -72,6 +75,10 @@ app.onError((err, c) => {
 
 app.route('/api/auth', authRoutes)
 app.route('/api/spots', spotsRoutes)
+app.route('/api/tags', tagsRoutes)
+app.route('/api/users', usersRoutes)
+app.route('/api/spots', spotReviewsRouter)
+app.route('/api/reviews', reviewRouter)
 
 app.get('/', (c) => {
   return c.text('FOMO API')

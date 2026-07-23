@@ -15,7 +15,9 @@ export const AtmosphereEnum = z.enum(['TENANG', 'NYAMAN', 'HIDUP', 'MODERAT']).o
 
 export const TagSchema = z.object({
   id: z.string().openapi({ example: 'clx123abc' }),
-  name: z.string().openapi({ example: 'Cafe' }),
+  name: z.string().openapi({ example: 'Wi-Fi' }),
+  icon: z.string().nullable().openapi({ example: '📶' }),
+  category: z.string().nullable().openapi({ example: 'amenity' }),
   createdAt: z.string().datetime(),
 }).openapi('Tag')
 

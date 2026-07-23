@@ -19,14 +19,14 @@ async function main() {
   console.log(`Created seed user: ${seedUser.id}`)
 
   const tags = await Promise.all([
-    prisma.tag.upsert({ where: { name: 'Wi-Fi' }, update: {}, create: { name: 'Wi-Fi' } }),
-    prisma.tag.upsert({ where: { name: 'Plugs' }, update: {}, create: { name: 'Plugs' } }),
-    prisma.tag.upsert({ where: { name: 'Quiet' }, update: {}, create: { name: 'Quiet' } }),
-    prisma.tag.upsert({ where: { name: 'Night Owl' }, update: {}, create: { name: 'Night Owl' } }),
-    prisma.tag.upsert({ where: { name: 'Smoking Area' }, update: {}, create: { name: 'Smoking Area' } }),
-    prisma.tag.upsert({ where: { name: 'Parking' }, update: {}, create: { name: 'Parking' } }),
-    prisma.tag.upsert({ where: { name: 'Outdoor' }, update: {}, create: { name: 'Outdoor' } }),
-    prisma.tag.upsert({ where: { name: 'Pet Friendly' }, update: {}, create: { name: 'Pet Friendly' } }),
+    prisma.tag.upsert({ where: { name: 'Wi-Fi' }, update: { icon: '📶', category: 'amenity' }, create: { name: 'Wi-Fi', icon: '📶', category: 'amenity' } }),
+    prisma.tag.upsert({ where: { name: 'Plugs' }, update: { icon: '⚡', category: 'amenity' }, create: { name: 'Plugs', icon: '⚡', category: 'amenity' } }),
+    prisma.tag.upsert({ where: { name: 'Quiet' }, update: { icon: '🤫', category: 'vibe' }, create: { name: 'Quiet', icon: '🤫', category: 'vibe' } }),
+    prisma.tag.upsert({ where: { name: 'Night Owl' }, update: { icon: '🦉', category: 'vibe' }, create: { name: 'Night Owl', icon: '🦉', category: 'vibe' } }),
+    prisma.tag.upsert({ where: { name: 'Smoking Area' }, update: { icon: '🚬', category: 'amenity' }, create: { name: 'Smoking Area', icon: '🚬', category: 'amenity' } }),
+    prisma.tag.upsert({ where: { name: 'Parking' }, update: { icon: '🅿️', category: 'amenity' }, create: { name: 'Parking', icon: '🅿️', category: 'amenity' } }),
+    prisma.tag.upsert({ where: { name: 'Outdoor' }, update: { icon: '🌿', category: 'amenity' }, create: { name: 'Outdoor', icon: '🌿', category: 'amenity' } }),
+    prisma.tag.upsert({ where: { name: 'Pet Friendly' }, update: { icon: '🐾', category: 'amenity' }, create: { name: 'Pet Friendly', icon: '🐾', category: 'amenity' } }),
   ])
   console.log(`Created ${tags.length} tags`)
 
