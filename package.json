@@ -9,6 +9,8 @@
     "seed": "bun run prisma/seed.ts"
   },
   "dependencies": {
+    "@hono/swagger-ui": "^0.6.1",
+    "@hono/zod-openapi": "^1.5.1",
     "@prisma/client": "^7.9.0",
     "@prisma/extension-accelerate": "^3.0.1",
     "@supabase/supabase-js": "^2.110.8",

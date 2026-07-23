@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
-import { supabaseAdmin } from '../../core/supabase'
+import { getSupabaseAdmin } from '../../core/supabase'
 import { getPrisma } from '../../core/prisma'
 import { googleLoginSchema, refreshSchema, GoogleLoginResponseSchema, RefreshResponseSchema, LogoutResponseSchema } from './auth.schema'
 import { AppError } from '../../core/errors'
@@ -64,7 +64,7 @@ const logoutRoute = createRoute({
 auth.openapi(googleRoute, async (c) => {
   const { id_token } = c.req.valid('json')
 
-  const { data, error } = await supabaseAdmin.auth.signInWithIdToken({
+  const { data, error } = await getSupabaseAdmin().auth.signInWithIdToken({
     provider: 'google',
     token: id_token,
   })
@@ -108,7 +108,7 @@ auth.openapi(googleRoute, async (c) => {
 auth.openapi(refreshRoute, async (c) => {
   const { refresh_token } = c.req.valid('json')
 
-  const { data, error } = await supabaseAdmin.auth.refreshSession({
+  const { data, error } = await getSupabaseAdmin().auth.refreshSession({
     refresh_token,
   })
 
@@ -128,7 +128,7 @@ auth.openapi(logoutRoute, async (c) => {
   const header = c.req.header('Authorization')
   if (header?.startsWith('Bearer ')) {
     const token = header.slice(7)
-    await supabaseAdmin.auth.admin.signOut(token)
+    await getSupabaseAdmin().auth.admin.signOut(token)
   }
 
   return c.json({ data: { message: 'Logged out' } })

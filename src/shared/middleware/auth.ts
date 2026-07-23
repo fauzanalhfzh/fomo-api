@@ -1,5 +1,5 @@
 import { Context, Next } from 'hono'
-import { supabaseAdmin } from '../../core/supabase'
+import { getSupabaseAdmin } from '../../core/supabase'
 import { getPrisma } from '../../core/prisma'
 import { UnauthorizedError, ForbiddenError } from '../../core/errors'
 
@@ -18,7 +18,7 @@ export async function authMiddleware(c: Context, next: Next) {
   }
 
   const token = header.slice(7)
-  const { data, error } = await supabaseAdmin.auth.getUser(token)
+  const { data, error } = await getSupabaseAdmin().auth.getUser(token)
 
   if (error || !data.user) {
     throw new UnauthorizedError('Invalid or expired token')
