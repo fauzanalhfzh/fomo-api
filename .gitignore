@@ -1,6 +1,11 @@
 # prod
 dist/
 
+# AI Agents
+.agents
+.superpowers
+.opencode
+
 # dev
 .yarn/
 !.yarn/releases

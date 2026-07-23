@@ -3,21 +3,23 @@
   "type": "module",
   "scripts": {
     "dev": "bun run src/server.ts",
-    "wrangler-dev": "wrangler dev --ip 0.0.0.0",
-    "deploy": "wrangler deploy --minify",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "seed": "bun run prisma/seed.ts"
+    "seed": "bun run prisma/seed.ts",
+    "mg:baseline": "cp prisma/schema.prisma prisma/schema-last.prisma",
+    "mg:diff": "bunx prisma migrate diff --from-schema prisma/schema-last.prisma --to-schema prisma/schema.prisma --script",
+    "mg:save": "bunx prisma migrate diff --from-schema prisma/schema-last.prisma --to-schema prisma/schema.prisma --script -o prisma/migrations/$(date -u +%Y%m%d%H%M%S)_migration/migration.sql && cp prisma/schema.prisma prisma/schema-last.prisma"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.5.1",
+    "@prisma/adapter-pg": "^7.9.0",
     "@prisma/client": "^7.9.0",
-    "@prisma/extension-accelerate": "^3.0.1",
     "@supabase/supabase-js": "^2.110.8",
     "hono": "^4.12.31",
+    "pg": "^8.22.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/pg": "^8.20.0",
     "prisma": "^7.9.0",
     "wrangler": "^4.113.0"
   }

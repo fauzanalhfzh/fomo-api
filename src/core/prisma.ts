@@ -1,13 +1,11 @@
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '../generated/prisma/client'
-import { withAccelerate } from '@prisma/extension-accelerate'
 
-let _prisma: ReturnType<typeof createPrisma> | null = null
+let _prisma: PrismaClient | null = null
 
 function createPrisma() {
-  const accelerateUrl = process.env.DATABASE_URL
-  return new PrismaClient({ accelerateUrl } as never).$extends(
-    withAccelerate(),
-  )
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+  return new PrismaClient({ adapter })
 }
 
 export function getPrisma() {

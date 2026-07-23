@@ -1,6 +1,17 @@
 import { z } from '@hono/zod-openapi'
 
-// ===== Response Schemas =====
+export const FacilityLevelEnum = z.enum(['BANYAK', 'ADA', 'TIDAK_ADA']).openapi({
+  example: 'ADA',
+})
+export const ToiletTypeEnum = z.enum(['DUDUK', 'JONGKOK', 'CAMPURAN']).openapi({
+  example: 'DUDUK',
+})
+export const GenderTypeEnum = z.enum(['PRIA', 'WANITA', 'UNISEX']).openapi({
+  example: 'UNISEX',
+})
+export const AtmosphereEnum = z.enum(['TENANG', 'NYAMAN', 'HIDUP', 'MODERAT']).openapi({
+  example: 'NYAMAN',
+})
 
 export const TagSchema = z.object({
   id: z.string().openapi({ example: 'clx123abc' }),
@@ -22,6 +33,32 @@ export const ReviewSchema = z.object({
   user: ReviewUserSchema,
 }).openapi('Review')
 
+export const ToiletSchema = z.object({
+  id: z.string(),
+  type: ToiletTypeEnum,
+  gender: GenderTypeEnum,
+  cleanliness: z.number().int().min(1).max(5),
+  hasDisabled: z.boolean(),
+  hasBabyFacility: z.boolean(),
+  hasMusholla: z.boolean(),
+  hasTissue: z.boolean(),
+  hasSoap: z.boolean(),
+  hasSanitizer: z.boolean(),
+  hasWastafel: z.boolean(),
+}).openapi('Toilet')
+
+export const SpotFacilitySchema = z.object({
+  id: z.string(),
+  wifi: FacilityLevelEnum,
+  wifiSpeed: z.string().nullable(),
+  plugs: FacilityLevelEnum,
+  comfyDesk: FacilityLevelEnum,
+  atmosphere: AtmosphereEnum.nullable(),
+  hasIndoor: z.boolean(),
+  toiletLevel: FacilityLevelEnum,
+  toilets: z.array(ToiletSchema),
+}).openapi('SpotFacility')
+
 export const SpotSchema = z.object({
   id: z.string().openapi({ example: 'clx456def' }),
   name: z.string().openapi({ example: 'Starbucks Grand Indonesia' }),
@@ -29,10 +66,17 @@ export const SpotSchema = z.object({
   address: z.string().openapi({ example: 'Grand Indonesia, Jakarta' }),
   latitude: z.number().openapi({ example: -6.1945 }),
   longitude: z.number().openapi({ example: 106.8228 }),
-  imageUrl: z.string().nullable().openapi({ example: 'https://example.com/photo.jpg' }),
+  photoUrls: z.array(z.string()).openapi({ example: ['https://example.com/photo.jpg'] }),
   fomoScore: z.number().openapi({ example: 87.5 }),
   isActive: z.boolean(),
   claimedById: z.string().nullable(),
+  priceMin: z.number().int().nullable(),
+  priceMax: z.number().int().nullable(),
+  openDays: z.string().nullable(),
+  openTime: z.string().nullable(),
+  closeTime: z.string().nullable(),
+  website: z.string().nullable(),
+  socialMedia: z.record(z.string()).nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 }).openapi('Spot')
@@ -40,6 +84,7 @@ export const SpotSchema = z.object({
 export const SpotListItemSchema = SpotSchema.extend({
   tags: z.array(TagSchema),
   reviewCount: z.number().int(),
+  facility: SpotFacilitySchema.pick({ wifi: true, plugs: true, comfyDesk: true, atmosphere: true, hasIndoor: true, toiletLevel: true }).nullable(),
 }).openapi('SpotListItem')
 
 export const SpotDetailSchema = SpotSchema.extend({
@@ -47,6 +92,7 @@ export const SpotDetailSchema = SpotSchema.extend({
   reviewCount: z.number().int(),
   averageRating: z.number().min(0).max(5),
   reviews: z.array(ReviewSchema),
+  facility: SpotFacilitySchema.nullable(),
 }).openapi('SpotDetail')
 
 export const PaginationMetaSchema = z.object({
@@ -73,6 +119,7 @@ export const SingleSpotResponseSchema = z.object({
 export const SpotCreatedResponseSchema = z.object({
   data: SpotSchema.extend({
     tags: z.array(TagSchema),
+    facility: SpotFacilitySchema.nullable(),
   }),
 }).openapi('SpotCreatedResponse')
 
@@ -82,7 +129,52 @@ export const DeleteSpotResponseSchema = z.object({
   }),
 }).openapi('DeleteSpotResponse')
 
-// ===== Request Schemas =====
+// ===== Input Schemas =====
+
+export const createSpotFacilitySchema = z.object({
+  wifi: FacilityLevelEnum.default('TIDAK_ADA'),
+  wifiSpeed: z.string().optional(),
+  plugs: FacilityLevelEnum.default('TIDAK_ADA'),
+  comfyDesk: FacilityLevelEnum.default('TIDAK_ADA'),
+  atmosphere: AtmosphereEnum.optional(),
+  hasIndoor: z.boolean().default(false),
+  toiletLevel: FacilityLevelEnum.default('TIDAK_ADA'),
+  toilets: z.array(z.object({
+    type: ToiletTypeEnum,
+    gender: GenderTypeEnum,
+    cleanliness: z.number().int().min(1).max(5),
+    hasDisabled: z.boolean().default(false),
+    hasBabyFacility: z.boolean().default(false),
+    hasMusholla: z.boolean().default(false),
+    hasTissue: z.boolean().default(false),
+    hasSoap: z.boolean().default(false),
+    hasSanitizer: z.boolean().default(false),
+    hasWastafel: z.boolean().default(true),
+  })).optional(),
+}).openapi('CreateSpotFacility')
+
+export const updateSpotFacilitySchema = z.object({
+  wifi: FacilityLevelEnum.optional(),
+  wifiSpeed: z.string().optional(),
+  plugs: FacilityLevelEnum.optional(),
+  comfyDesk: FacilityLevelEnum.optional(),
+  atmosphere: AtmosphereEnum.optional(),
+  hasIndoor: z.boolean().optional(),
+  toiletLevel: FacilityLevelEnum.optional(),
+  toilets: z.array(z.object({
+    id: z.string().optional(),
+    type: ToiletTypeEnum,
+    gender: GenderTypeEnum,
+    cleanliness: z.number().int().min(1).max(5),
+    hasDisabled: z.boolean().default(false),
+    hasBabyFacility: z.boolean().default(false),
+    hasMusholla: z.boolean().default(false),
+    hasTissue: z.boolean().default(false),
+    hasSoap: z.boolean().default(false),
+    hasSanitizer: z.boolean().default(false),
+    hasWastafel: z.boolean().default(true),
+  })).optional(),
+}).openapi('UpdateSpotFacility')
 
 export const createSpotSchema = z.object({
   name: z.string().min(1).max(200).openapi({
@@ -105,14 +197,43 @@ export const createSpotSchema = z.object({
     example: 106.8228,
     description: 'Longitude coordinate',
   }),
-  imageUrl: z.string().url().openapi({
-    example: 'https://example.com/photo.jpg',
-    description: 'Spot image URL',
+  photoUrls: z.array(z.string().url()).openapi({
+    example: ['https://example.com/photo.jpg'],
+    description: 'Spot photo URLs',
+  }).optional(),
+  priceMin: z.number().int().min(0).openapi({
+    example: 15000,
+    description: 'Minimum price in IDR',
+  }).optional(),
+  priceMax: z.number().int().min(0).openapi({
+    example: 50000,
+    description: 'Maximum price in IDR',
+  }).optional(),
+  openDays: z.string().openapi({
+    example: 'Senin-Sabtu',
+    description: 'Operating days',
+  }).optional(),
+  openTime: z.string().openapi({
+    example: '08:00',
+    description: 'Opening time',
+  }).optional(),
+  closeTime: z.string().openapi({
+    example: '22:00',
+    description: 'Closing time',
+  }).optional(),
+  website: z.string().url().openapi({
+    example: 'https://example.com',
+    description: 'Website URL',
+  }).optional(),
+  socialMedia: z.record(z.string()).openapi({
+    example: { instagram: 'https://instagram.com/example' },
+    description: 'Social media URLs',
   }).optional(),
   tagIds: z.array(z.string()).openapi({
     description: 'Tag IDs to associate',
     example: ['clx123abc'],
   }).optional(),
+  facility: createSpotFacilitySchema.optional(),
 })
 
 export const updateSpotSchema = z.object({
@@ -121,8 +242,16 @@ export const updateSpotSchema = z.object({
   address: z.string().min(1).max(500).openapi({ example: 'Grand Indonesia, Jakarta' }).optional(),
   latitude: z.number().min(-90).max(90).openapi({ example: -6.1945 }).optional(),
   longitude: z.number().min(-180).max(180).openapi({ example: 106.8228 }).optional(),
-  imageUrl: z.string().url().openapi({ example: 'https://example.com/photo.jpg' }).optional(),
+  photoUrls: z.array(z.string().url()).openapi({ example: ['https://example.com/photo.jpg'] }).optional(),
+  priceMin: z.number().int().min(0).openapi({ example: 15000 }).optional(),
+  priceMax: z.number().int().min(0).openapi({ example: 50000 }).optional(),
+  openDays: z.string().openapi({ example: 'Senin-Sabtu' }).optional(),
+  openTime: z.string().openapi({ example: '08:00' }).optional(),
+  closeTime: z.string().openapi({ example: '22:00' }).optional(),
+  website: z.string().url().openapi({ example: 'https://example.com' }).optional(),
+  socialMedia: z.record(z.string()).openapi({ example: { instagram: 'https://instagram.com/example' } }).optional(),
   tagIds: z.array(z.string()).openapi({ example: ['clx123abc'] }).optional(),
+  facility: updateSpotFacilitySchema.optional(),
 })
 
 export const listSpotsQuerySchema = z.object({

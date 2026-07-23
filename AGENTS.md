@@ -2,16 +2,13 @@
 
 ## Stack
 
-Bun + Hono + Cloudflare Workers (Wrangler).
+Bun + Hono
 
 ## Commands
 
 | Command | Action |
 |---|---|
 | `bun run src/server.ts` | Dev server (Bun, port 8787) |
-| `npm run wrangler-dev` | Dev via Wrangler (`--ip 0.0.0.0`) |
-| `npm run deploy` | Deploy to Cloudflare Workers (`--minify`) |
-| `npm run cf-typegen` | Regenerate `CloudflareBindings` types |
 
 ## Known Quirks
 
@@ -40,19 +37,37 @@ src/
 - `.env`, `.env.production`, `.dev.vars` are gitignored.
 - `.dev.vars` is for local Wrangler secrets.
 
+## Migrations (via Supabase + Prisma)
+
+Supabase pooler (port 6543) doesn't support DDL through Prisma CLI. Migration workflow:
+
+1. Edit `prisma/schema.prisma`
+2. Generate migration SQL:
+   ```
+   bun run mg:diff
+   ```
+   Review the output, then save & create migration file:
+   ```
+   bun run mg:save
+   ```
+3. Apply the SQL via Supabase Dashboard (SQL Editor) or the Supabase MCP tool
+4. Register in `_prisma_migrations` table (run via Supabase SQL Editor):
+   ```sql
+   INSERT INTO "_prisma_migrations" ("id", "checksum", "finished_at", "migration_name", "applied_steps_count")
+   VALUES (
+     gen_random_uuid()::text,
+     -- ganti path sesuai nama migration
+     sha256(pg_read_file('/path/to/migration.sql'))::text,
+     now(),
+     '20260723000000_nama_migration',
+     1
+   );
+   ```
+   Or compute checksum manually: `sha256sum prisma/migrations/[name]/migration.sql`
+
+Note: `mg:diff` compares `schema-last.prisma` vs `schema.prisma`. The baseline is auto-updated after `mg:save`. If starting fresh after a clone, run `bun run mg:baseline` first.
+
 ## OpenCode
 
 Hono skills (`honos`, `honod`) are pre-installed under `.opencode/skills/` — use them for Hono API code and docs.
 
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

@@ -8,6 +8,42 @@ import type {
 } from './spots.schema'
 import type { PaginationMeta } from '../../shared/types'
 
+const spotInclude = {
+  tags: { include: { tag: true } },
+  _count: { select: { reviews: true } },
+}
+
+const facilitySelect = {
+  wifi: true,
+  wifiSpeed: true,
+  plugs: true,
+  comfyDesk: true,
+  atmosphere: true,
+  hasIndoor: true,
+  toiletLevel: true,
+}
+
+const detailFacilityInclude = {
+  wifi: true,
+  wifiSpeed: true,
+  plugs: true,
+  comfyDesk: true,
+  atmosphere: true,
+  hasIndoor: true,
+  toiletLevel: true,
+  toilets: true,
+}
+
+function mapSpot(spot: any) {
+  return {
+    ...spot,
+    tags: spot.tags?.map((st: any) => st.tag) ?? [],
+    reviewCount: spot._count?.reviews ?? 0,
+    _count: undefined,
+    tags: spot.tags?.map((st: any) => st.tag) ?? [],
+  }
+}
+
 export async function listSpots(query: ListSpotsQuery) {
   const { page, limit, tag, q } = query
   const skip = (page - 1) * limit
@@ -31,8 +67,8 @@ export async function listSpots(query: ListSpotsQuery) {
       skip,
       take: limit,
       include: {
-        tags: { include: { tag: true } },
-        _count: { select: { reviews: true } },
+        ...spotInclude,
+        facility: { select: facilitySelect },
       },
       orderBy: { createdAt: 'desc' },
     }),
@@ -41,11 +77,9 @@ export async function listSpots(query: ListSpotsQuery) {
 
   const meta: PaginationMeta = { page, limit, total }
 
-  const data = (spots as any[]).map((spot) => ({
-    ...spot,
-    tags: spot.tags.map((st: any) => st.tag),
-    reviewCount: spot._count.reviews,
-    _count: undefined,
+  const data = spots.map((spot: any) => ({
+    ...mapSpot(spot),
+    facility: spot.facility,
   }))
 
   return { data, meta }
@@ -78,6 +112,7 @@ export async function getSpotById(id: string) {
     where: { id, isActive: true },
     include: {
       tags: { include: { tag: true } },
+      facility: { select: detailFacilityInclude },
       reviews: {
         select: {
           id: true,
@@ -102,27 +137,37 @@ export async function getSpotById(id: string) {
 
   return {
     data: {
-      ...spot,
-      tags: spot.tags.map((st: any) => st.tag),
-      reviewCount: spot._count.reviews,
+      ...mapSpot(spot),
       averageRating: avgRating._avg.rating ?? 0,
-      _count: undefined,
+      facility: spot.facility,
     },
   }
 }
 
 export async function createSpot(input: CreateSpotInput) {
-  const { tagIds, ...data } = input
+  const { tagIds, facility: facilityInput, ...data } = input
 
   const spot: any = await getPrisma().spot.create({
     data: {
       ...data,
+      photoUrls: data.photoUrls ?? [],
       tags: tagIds
         ? { create: tagIds.map((tagId) => ({ tagId })) }
+        : undefined,
+      facility: facilityInput
+        ? {
+            create: {
+              ...facilityInput,
+              toilets: facilityInput.toilets
+                ? { create: facilityInput.toilets }
+                : undefined,
+            },
+          }
         : undefined,
     },
     include: {
       tags: { include: { tag: true } },
+      facility: { select: detailFacilityInclude },
     },
   })
 
@@ -138,7 +183,7 @@ export async function updateSpot(id: string, input: UpdateSpotInput) {
   const existing = await getPrisma().spot.findUnique({ where: { id } })
   if (!existing || !existing.isActive) throw new NotFoundError('Spot not found')
 
-  const { tagIds, ...data } = input
+  const { tagIds, facility: facilityInput, ...data } = input
 
   const spot: any = await getPrisma().$transaction(async (tx: any) => {
     if (tagIds) {
@@ -148,11 +193,40 @@ export async function updateSpot(id: string, input: UpdateSpotInput) {
       })
     }
 
+    if (facilityInput) {
+      const { toilets: toiletInput, ...facilityData } = facilityInput
+
+      await tx.spotFacility.upsert({
+        where: { spotId: id },
+        create: {
+          spotId: id,
+          ...facilityData,
+          toilets: toiletInput
+            ? { create: toiletInput }
+            : undefined,
+        },
+        update: facilityData,
+      })
+
+      if (toiletInput) {
+        await tx.toilet.deleteMany({ where: { facility: { spotId: id } } })
+        if (toiletInput.length > 0) {
+          const facility = await tx.spotFacility.findUnique({ where: { spotId: id } })
+          if (facility) {
+            await tx.toilet.createMany({
+              data: toiletInput.map((t: any) => ({ ...t, facilityId: facility.id })),
+            })
+          }
+        }
+      }
+    }
+
     return tx.spot.update({
       where: { id },
       data,
       include: {
         tags: { include: { tag: true } },
+      facility: { select: detailFacilityInclude },
       },
     })
   })
