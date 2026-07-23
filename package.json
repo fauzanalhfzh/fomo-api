@@ -4,6 +4,11 @@
   "scripts": {
     "dev": "bun run src/server.ts",
     "seed": "bun run prisma/seed.ts",
+    "test:all": "bun run tests/run-all.ts",
+    "test:tags": "bun run src/modules/tags/tags.test.ts",
+    "test:spots": "bun run src/modules/spots/spots.test.ts",
+    "test:users": "bun run src/modules/users/users.test.ts",
+    "test:reviews": "bun run src/modules/reviews/reviews.test.ts",
     "mg:baseline": "cp prisma/schema.prisma prisma/schema-last.prisma",
     "mg:diff": "bunx prisma migrate diff --from-schema prisma/schema-last.prisma --to-schema prisma/schema.prisma --script",
     "mg:save": "bunx prisma migrate diff --from-schema prisma/schema-last.prisma --to-schema prisma/schema.prisma --script -o prisma/migrations/$(date -u +%Y%m%d%H%M%S)_migration/migration.sql && cp prisma/schema.prisma prisma/schema-last.prisma"
