@@ -26,17 +26,27 @@ app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
   bearerFormat: 'JWT',
 })
 
-app.doc('/doc', {
+const apiSpec = {
   openapi: '3.0.0',
   info: {
     title: 'FOMO API',
     version: '1.0.0',
     description: 'API for FOMO (Fear Of Missing Out) — spot discovery platform',
   },
-  servers: [{ url: `http://localhost:${process.env.PORT}`, description: 'Local dev' }],
+} as const
+
+app.doc('/doc', apiSpec)
+
+app.get('/openapi', (c) => {
+  const origin = new URL(c.req.url).origin
+  const spec = app.getOpenAPIDocument({
+    ...apiSpec,
+    servers: [{ url: origin, description: 'Current origin' }],
+  })
+  return c.json(spec)
 })
 
-app.get('/swagger', swaggerUI({ url: '/doc' }))
+app.get('/swagger', swaggerUI({ url: '/openapi' }))
 
 app.onError((err, c) => {
   if (err instanceof ZodError) {
