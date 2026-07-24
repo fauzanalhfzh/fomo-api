@@ -11,9 +11,8 @@ RUN bunx prisma generate
 
 FROM oven/bun:1 AS runner
 WORKDIR /app
-RUN adduser --system --uid 1001 --group hono
 COPY --from=build /app /app
 EXPOSE 8787
-USER hono
+USER bun
 ENV PORT=8787
 CMD ["bun", "run", "src/server.ts"]
