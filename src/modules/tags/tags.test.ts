@@ -1,4 +1,4 @@
-import { test, startServer, BASE } from '../../../tests/helpers'
+import { test, startServer, getFailed, BASE } from '../../../tests/helpers'
 
 async function main() {
   const stop = await startServer()
@@ -14,6 +14,8 @@ async function main() {
 
   await stop()
   console.log('\n✨ Tags tests complete\n')
+
+  if (getFailed() > 0) process.exit(1)
 }
 
 main().catch((e) => { console.error('\n💥 Test failed:', e.message); process.exit(1) })

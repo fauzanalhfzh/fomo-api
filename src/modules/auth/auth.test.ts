@@ -1,4 +1,4 @@
-import { test, createTestUser, signIn, startServer, BASE } from '../../../tests/helpers'
+import { test, createTestUser, signIn, startServer, getFailed, BASE } from '../../../tests/helpers'
 
 let accessToken = ''
 let refreshToken = ''
@@ -28,7 +28,6 @@ async function main() {
     if (res.status !== 200) throw new Error(`Expected 200, got ${res.status}`)
     const body: any = await res.json()
     if (!body.data.access_token) throw new Error('No access_token')
-    console.log(`     New token: ${body.data.access_token.slice(0, 20)}...`)
   })
 
   await test('POST /api/auth/logout (valid) => 200', async () => {
@@ -59,6 +58,8 @@ async function main() {
 
   await stop()
   console.log('\n✨ Auth tests complete\n')
+
+  if (getFailed() > 0) process.exit(1)
 }
 
 main().catch((e) => { console.error('\n💥 Test failed:', e.message); process.exit(1) })

@@ -1,4 +1,4 @@
-import { test, createTestUser, signIn, startServer, BASE } from '../../../tests/helpers'
+import { test, createTestUser, signIn, startServer, getFailed, BASE } from '../../../tests/helpers'
 
 let accessToken = ''
 
@@ -78,10 +78,6 @@ async function main() {
     console.log(`     Rating: ${body.data.rating}, content: ${body.data.content}`)
   })
 
-  await test('PATCH /api/reviews/:id (other user) => 403', async () => {
-    console.log(`     (skipped — single test user, needs 2 test accounts)`)
-  })
-
   await test('DELETE /api/reviews/:id => 200', async () => {
     const res = await fetch(`${BASE}/api/reviews/${reviewId}`, {
       method: 'DELETE',
@@ -105,6 +101,8 @@ async function main() {
 
   await stop()
   console.log('\n✨ Reviews tests complete\n')
+
+  if (getFailed() > 0) process.exit(1)
 }
 
 main().catch((e) => { console.error('\n💥 Test failed:', e.message); process.exit(1) })

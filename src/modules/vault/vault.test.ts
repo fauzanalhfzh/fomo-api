@@ -1,4 +1,4 @@
-import { test, createTestUser, signIn, startServer, BASE } from '../../../tests/helpers'
+import { test, createTestUser, signIn, startServer, getFailed, BASE } from '../../../tests/helpers'
 
 let accessToken = ''
 let spotId = ''
@@ -106,6 +106,8 @@ async function main() {
 
   await stop()
   console.log('\n✨ Vault tests complete\n')
+
+  if (getFailed() > 0) process.exit(1)
 }
 
 main().catch((e) => { console.error('\n💥 Test failed:', e.message); process.exit(1) })

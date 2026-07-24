@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { test, createTestUser, signIn, startServer, BASE, ensureEnv } from '../../../tests/helpers'
+import { test, createTestUser, signIn, startServer, getFailed, BASE } from '../../../tests/helpers'
+import { getPrisma } from '../../core/prisma'
 
 let userAccessToken = ''
 let adminAccessToken = ''
@@ -17,44 +17,19 @@ async function main() {
     userAccessToken = tokens.accessToken
   })
 
-  // Create a test admin user
   await test('Create admin user', async () => {
-    const admin = createClient(ensureEnv('SUPABASE_URL'), ensureEnv('SUPABASE_SERVICE_ROLE_KEY'), {
-      auth: { autoRefreshToken: false, persistSession: false },
+    const { userId } = await createTestUser('admin@fomo.app', 'Admin123!@#')
+    await getPrisma().user.upsert({
+      where: { id: userId },
+      create: { id: userId, email: 'admin@fomo.app', role: 'admin' },
+      update: { role: 'admin' },
     })
-    const { data, error } = await admin.auth.admin.createUser({
-      email: 'admin@fomo.app',
-      password: 'Admin123!@#',
-      email_confirm: true,
-      user_metadata: { role: 'admin' },
-    })
-    if (error && error.message.includes('already exists')) {
-      const { data: users } = await admin.auth.admin.listUsers()
-      const found = users.users.find((u) => u.email === 'admin@fomo.app')
-      if (found) {
-        // set admin role in DB
-        const { getPrisma } = await import('../../core/prisma')
-        await getPrisma().user.update({
-          where: { id: found.id },
-          data: { role: 'admin' },
-        })
-      }
-    } else if (data) {
-      const { getPrisma } = await import('../../core/prisma')
-      await getPrisma().user.create({
-        data: { id: data.user.id, email: 'admin@fomo.app', role: 'admin' },
-      })
-    }
+    console.log(`     Admin ID: ${userId}`)
   })
 
   await test('Sign in as admin', async () => {
-    const client = createClient(ensureEnv('SUPABASE_URL'), ensureEnv('SUPABASE_ANON_KEY'))
-    const { data, error } = await client.auth.signInWithPassword({
-      email: 'admin@fomo.app',
-      password: 'Admin123!@#',
-    })
-    if (error) throw error
-    adminAccessToken = data.session!.access_token
+    const tokens = await signIn('admin@fomo.app', 'Admin123!@#')
+    adminAccessToken = tokens.accessToken
   })
 
   await test('POST /api/suggestions (user) => 201', async () => {
@@ -141,6 +116,8 @@ async function main() {
 
   await stop()
   console.log('\n✨ Suggestions tests complete\n')
+
+  if (getFailed() > 0) process.exit(1)
 }
 
 main().catch((e) => { console.error('\n💥 Test failed:', e.message); process.exit(1) })
