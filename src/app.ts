@@ -16,9 +16,7 @@ import { ZodError } from 'zod/v4'
 
 const app = new OpenAPIHono()
 
-app.use('*', cors({
-  origin: '*',
-}))
+app.use('*', cors())
 
 app.use('*', logger())
 
