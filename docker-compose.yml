@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    container_name: fomo-api
+    ports:
+      - "8787:8787"
+    environment:
+      - PORT=8787
+      - DATABASE_URL
+      - SUPABASE_URL
+      - SUPABASE_SERVICE_ROLE_KEY
+      - SUPABASE_ANON_KEY
+    restart: unless-stopped

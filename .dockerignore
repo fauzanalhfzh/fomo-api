@@ -1,0 +1,12 @@
+.git
+.gitignore
+node_modules
+src/generated
+tests
+docs
+prisma/schema-last.prisma
+.env
+.env.*
+.dev.vars
+*.md
+AGENTS.md
