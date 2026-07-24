@@ -32,6 +32,12 @@ enum Atmosphere {
   MODERAT
 }
 
+enum SuggestionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id        String   @id
   email     String?  @unique
@@ -41,9 +47,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  claimedSpots Spot[]
-  reviews      Review[]
-  vault        VaultEntry[]
+  claimedSpots        Spot[]
+  reviews             Review[]
+  vault               VaultEntry[]
+  suggestions         Suggestion[] @relation("suggestedBy")
+  reviewedSuggestions Suggestion[] @relation("reviewedBy")
 }
 
 model Spot {
@@ -118,6 +126,24 @@ model VaultEntry {
   spot Spot @relation(fields: [spotId], references: [id], onDelete: Cascade)
 
   @@unique([userId, spotId])
+}
+
+model Suggestion {
+  id            String           @id @default(cuid())
+  alias         String
+  contactDrop   String           @map("contact_drop")
+  theIntel      String           @map("the_intel")
+  status        SuggestionStatus @default(PENDING)
+  suggestedById String           @map("suggested_by_id")
+  reviewedById  String?          @map("reviewed_by_id")
+  reviewedAt    DateTime?        @map("reviewed_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  suggestedBy User  @relation("suggestedBy", fields: [suggestedById], references: [id], onDelete: Cascade)
+  reviewedBy  User? @relation("reviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@map("suggestions")
 }
 
 model SpotFacility {

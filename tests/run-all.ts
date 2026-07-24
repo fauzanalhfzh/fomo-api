@@ -5,6 +5,7 @@ const TEST_FILES = [
   'src/modules/users/users.test.ts',
   'src/modules/reviews/reviews.test.ts',
   'src/modules/vault/vault.test.ts',
+  'src/modules/suggestions/suggestions.test.ts',
 ]
 
 let passCount = 0

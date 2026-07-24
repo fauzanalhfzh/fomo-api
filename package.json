@@ -10,6 +10,7 @@
     "test:users": "bun run src/modules/users/users.test.ts",
     "test:reviews": "bun run src/modules/reviews/reviews.test.ts",
     "test:vault": "bun run src/modules/vault/vault.test.ts",
+    "test:suggestions": "bun run src/modules/suggestions/suggestions.test.ts",
     "mg:baseline": "cp prisma/schema.prisma prisma/schema-last.prisma",
     "mg:diff": "bunx prisma migrate diff --from-schema prisma/schema-last.prisma --to-schema prisma/schema.prisma --script",
     "mg:save": "bunx prisma migrate diff --from-schema prisma/schema-last.prisma --to-schema prisma/schema.prisma --script -o prisma/migrations/$(date -u +%Y%m%d%H%M%S)_migration/migration.sql && cp prisma/schema.prisma prisma/schema-last.prisma"
