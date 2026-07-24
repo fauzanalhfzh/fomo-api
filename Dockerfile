@@ -11,8 +11,7 @@ RUN bunx prisma generate
 
 FROM oven/bun:1 AS runner
 WORKDIR /app
-RUN addgroup --system --gid 1001 nodejs && \
-  adduser --system --uid 1001 --ingroup nodejs hono
+RUN adduser --system --uid 1001 --group hono
 COPY --from=build /app /app
 EXPOSE 8787
 USER hono
