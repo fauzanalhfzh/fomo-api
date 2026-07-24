@@ -4,8 +4,8 @@ LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = ''
 AS $$
 BEGIN
-  INSERT INTO public.users (id, email, role)
-  VALUES (new.id, new.email, 'user')
+  INSERT INTO public."User" (id, email, role, "updatedAt")
+  VALUES (new.id, new.email, 'user', now())
   ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;
