@@ -12,13 +12,14 @@ import suggestionsRoutes from './modules/suggestions/suggestions.routes'
 import { spotReviewsRouter, reviewRouter } from './modules/reviews/reviews.routes'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import { AppError } from './core/errors'
+import { rateLimit } from './shared/middleware/rate-limit'
 import { ZodError } from 'zod/v4'
 
 const app = new OpenAPIHono()
 
 app.use('*', cors())
-
 app.use('*', logger())
+app.use('*', rateLimit(100, 60))
 
 app.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
   type: 'http',

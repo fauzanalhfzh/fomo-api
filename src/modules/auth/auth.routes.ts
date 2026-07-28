@@ -1,4 +1,5 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
+import { rateLimit } from '../../shared/middleware/rate-limit'
 import { getSupabaseAdmin } from '../../core/supabase'
 import { getPrisma } from '../../core/prisma'
 import { googleLoginSchema, refreshSchema, GoogleLoginResponseSchema, RefreshResponseSchema, LogoutResponseSchema } from './auth.schema'
@@ -6,6 +7,7 @@ import { AppError } from '../../core/errors'
 import { ErrorResponseSchema } from '../../shared/openapi'
 
 const auth = new OpenAPIHono()
+auth.use('*', rateLimit(10, 60))
 
 const googleRoute = createRoute({
   method: 'post',

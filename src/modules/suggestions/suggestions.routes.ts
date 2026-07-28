@@ -1,4 +1,5 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi'
+import { rateLimit } from '../../shared/middleware/rate-limit'
 import { authMiddleware, adminGuard } from '../../shared/middleware/auth'
 import { ErrorResponseSchema } from '../../shared/openapi'
 import type { AuthUser } from '../../shared/middleware/auth'
@@ -14,6 +15,7 @@ import {
 
 const suggestions = new OpenAPIHono()
 suggestions.use('/*', authMiddleware)
+suggestions.use('/*', rateLimit(20, 60))
 
 const createRouteDef = createRoute({
   method: 'post',
